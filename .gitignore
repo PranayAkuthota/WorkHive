@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Env config
+.env
+**/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+**/.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/

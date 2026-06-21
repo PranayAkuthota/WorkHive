@@ -1,6 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import ChatDrawer from "../Components/ChatDrawer";
 
 export default function Dashboard() {
   const [name, setName] = useState("");
@@ -261,7 +262,7 @@ export default function Dashboard() {
 
         </div>
       </main>
-
+      <ChatDrawer />
     </div>
   );
 }

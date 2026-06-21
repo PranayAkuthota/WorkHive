@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import ChatDrawer from "../Components/ChatDrawer";
 
 export default function TaskPage() {
   const [title, setTitle] = useState("");
@@ -432,7 +433,7 @@ export default function TaskPage() {
 
         </div>
       </main>
-
+      <ChatDrawer />
     </div>
   );
 }
