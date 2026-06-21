@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -8,8 +8,21 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [selectedRole, setSelectedRole] = useState("Admin"); // Default portal: Admin, Manager, Member
+  const [orgList, setOrgList] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchOrgs = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/organizations/list");
+        setOrgList(res.data);
+      } catch (err) {
+        console.error("Failed to load organizations list:", err);
+      }
+    };
+    fetchOrgs();
+  }, []);
  
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -140,21 +153,50 @@ export default function Register() {
             />
           </div>
 
-          {/* Conditional Invite Code Input for Manager and Member signups */}
+          {/* Conditional Invite Code / Org selection for Manager and Member signups */}
           {selectedRole !== "Admin" && (
-            <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
-                Invite Code *
-              </label>
-              <input
-                type="text"
-                required
-                className="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all duration-300 font-mono text-sm tracking-widest"
-                placeholder="Enter workspace invite code"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                disabled={loading}
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                  Select Existing Organization *
+                </label>
+                <div className="relative">
+                  <select
+                    className="bg-zinc-950/80 border border-zinc-800/80 text-zinc-100 rounded-lg p-3 w-full focus:outline-none focus:border-indigo-500/50 transition-all duration-300 text-sm appearance-none pr-8 cursor-pointer"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                  >
+                    <option value="">-- Choose Organization --</option>
+                    {orgList.map((org) => (
+                      <option key={org._id} value={org.inviteCode}>
+                        {org.name?.replace(/_org$/, "")} ({org.inviteCode})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+ 
+              <div className="text-center text-xs text-zinc-600 font-bold tracking-wider uppercase">— OR —</div>
+ 
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                  Enter Invite Code Manually *
+                </label>
+                <input
+                  type="text"
+                  required={!inviteCode}
+                  className="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all duration-300 font-mono text-sm tracking-widest"
+                  placeholder="Enter workspace invite code"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
             </div>
           )}
 
