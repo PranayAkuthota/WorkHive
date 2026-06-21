@@ -190,9 +190,15 @@ router.put("/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "Tenant ID is missing from token" });
     }
 
+    const { status, title, projectId } = req.body;
+    const updateData = {};
+    if (status !== undefined) updateData.status = status;
+    if (title !== undefined) updateData.title = title;
+    if (projectId !== undefined) updateData.projectId = projectId;
+
     const task = await Task.findOneAndUpdate(
       { _id: id, tenantId: req.user.tenantId },
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 

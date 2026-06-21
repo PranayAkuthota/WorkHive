@@ -1,29 +1,40 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 export default function Dashboard() {
   const [name, setName] = useState("");
   const [projects, setProjects] = useState([]);
   const [inviteCode, setInviteCode] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Logout function
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  }, [navigate]);
+
   // Fetch projects when component mounts
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-        const res = await axios.get("http://localhost:5000/api/projects", {
-          headers: { Authorization: token }
-        });
-        setProjects(res.data);
-      } catch (err) {
-        console.error("Failed to fetch projects:", err);
+  const fetchProjects = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const res = await axios.get("http://localhost:5000/api/projects", {
+        headers: { Authorization: token }
+      });
+      setProjects(res.data);
+    } catch (err) {
+      console.error("Failed to fetch projects:", err);
+      if (err.response?.status === 401) {
+        handleLogout();
       }
-    };
+    }
+  }, [handleLogout]);
+
+  useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [fetchProjects]);
 
   // Fetch invite code for current organization
   useEffect(() => {
@@ -43,110 +54,214 @@ export default function Dashboard() {
   }, []);
 
   // Create a new project
-  const createProject = async () => {
+  const createProject = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      alert("Please enter a project name");
+      return;
+    }
+
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
-      if (!name.trim()) {
-        alert("Please enter a project name");
-        return;
-      }
       await axios.post(
         "http://localhost:5000/api/projects",
         { name },
         { headers: { Authorization: token } }
       );
-      alert("Project created");
       setName("");
-
-      // Refresh projects list
-      const res = await axios.get("http://localhost:5000/api/projects", {
-        headers: { Authorization: token }
-      });
-      setProjects(res.data);
+      fetchProjects(); // Refresh projects list
     } catch (err) {
       console.error("Failed to create project:", err);
       alert("Failed to create project");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logout function
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
   return (
-    <div className="p-6">
-      {/* Header with title and logout button */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        >
-          Logout
-        </button>
-      </div>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col md:flex-row font-sans">
+      
+      {/* Decorative Blur Ambient Elements */}
+      <div className="absolute w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[140px] top-10 left-10 pointer-events-none" />
+      
+      {/* Sidebar Component */}
+      <aside className="w-full md:w-64 bg-zinc-900/40 border-b md:border-b-0 md:border-r border-zinc-900 backdrop-blur-xl flex flex-col justify-between p-6 z-10">
+        <div className="space-y-8">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-amber-300">
+              Workhive
+            </span>
+          </div>
 
-      {/* Display invite code for team sharing */}
-      {inviteCode && (
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded mb-6">
-          <p className="font-semibold">Team Invite Code:</p>
-          <code className="text-lg font-mono bg-white px-2 py-1 rounded border">
-            {inviteCode}
-          </code>
-          <p className="text-sm text-gray-600 mt-1">
-            Share this code with new team members to join your organization.
-          </p>
+          {/* Navigation Links */}
+          <nav className="space-y-1">
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-3 bg-amber-500/10 text-amber-400 font-medium px-4 py-2.5 rounded-lg border border-amber-500/20 transition-all duration-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+              </svg>
+              Dashboard
+            </Link>
+            
+            <Link
+              to="/tasks"
+              className="flex items-center gap-3 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40 px-4 py-2.5 rounded-lg transition-all duration-200"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              </svg>
+              Tasks
+            </Link>
+          </nav>
+        </div>
+
+        {/* Invite Code Block (Sidebar Bottom) */}
+        <div className="mt-8 pt-6 border-t border-zinc-900 space-y-4">
+          {inviteCode && (
+            <div className="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-4">
+              <span className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+                Invite Code
+              </span>
+              <div className="flex items-center justify-between gap-2">
+                <code className="text-xs font-mono text-amber-400 bg-zinc-900/80 px-2.5 py-1 rounded border border-zinc-800 select-all">
+                  {inviteCode}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(inviteCode);
+                    alert("Invite code copied to clipboard!");
+                  }}
+                  className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-amber-400 transition-colors"
+                  title="Copy Invite Code"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                Provide this token to invite colleagues.
+              </p>
+            </div>
+          )}
+
+          {/* Logout Button */}
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(inviteCode);
-              alert("Invite code copied to clipboard!");
-            }}
-            className="mt-2 text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 text-zinc-400 hover:text-red-400 hover:bg-red-500/5 px-4 py-2.5 rounded-lg border border-transparent hover:border-red-500/10 transition-all duration-300"
           >
-            Copy Code
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+            </svg>
+            Log Out
           </button>
         </div>
-      )}
+      </aside>
 
-      {/* Create Project form */}
-      <div className="mb-6">
-        <input
-          className="border p-2 mr-2"
-          placeholder="Project Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={createProject}
-        >
-          Create Project
-        </button>
-      </div>
-
-      {/* List of projects */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Your Projects</h2>
-        {projects.length === 0 ? (
-          <p className="text-gray-500">No projects yet. Create one above.</p>
-        ) : (
-          projects.map((p) => (
-            <div key={p._id} className="bg-gray-100 p-3 mt-2 rounded shadow">
-              {p.name}
+      {/* Main Content Pane */}
+      <main className="flex-1 p-6 md:p-10 z-10 overflow-y-auto">
+        <header className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 via-amber-100 to-amber-400 tracking-tight m-0">
+              Workspace Overview
+            </h1>
+            <p className="text-zinc-400 text-sm mt-1">Manage and track your active tenant projects</p>
+          </div>
+          
+          {/* Quick Stat */}
+          <div className="flex gap-4">
+            <div className="bg-zinc-900/30 border border-zinc-900 px-4 py-2.5 rounded-xl flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs text-zinc-400 font-medium">Database Connected</span>
             </div>
-          ))
-        )}
-      </div>
+          </div>
+        </header>
 
-      {/* Navigate to Tasks */}
-      <button
-        className="bg-purple-500 text-white px-4 py-2 rounded"
-        onClick={() => navigate("/tasks")}
-      >
-        Go to Tasks
-      </button>
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Create Project Card (Col Span 1) */}
+          <section className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6 h-fit">
+            <h2 className="text-lg font-bold text-zinc-200 mb-1">Create Project</h2>
+            <p className="text-xs text-zinc-500 mb-6">Initialize a new container for tasks</p>
+            
+            <form onSubmit={createProject} className="space-y-4">
+              <input
+                className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-500/30 transition-all duration-300 text-sm"
+                placeholder="e.g. Website Redesign"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={loading}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-2.5 rounded-lg transition-all duration-300 transform active:scale-95 disabled:opacity-50 text-sm"
+              >
+                {loading ? "Creating..." : "Create Project"}
+              </button>
+            </form>
+          </section>
+
+          {/* Projects List Card (Col Span 2) */}
+          <section className="lg:col-span-2 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-zinc-200 m-0">Your Projects</h2>
+              <span className="text-xs text-zinc-500 font-mono">
+                {projects.length} {projects.length === 1 ? "project" : "projects"} total
+              </span>
+            </div>
+
+            {projects.length === 0 ? (
+              <div className="bg-zinc-900/10 border border-zinc-900 border-dashed rounded-2xl p-10 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-zinc-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <p className="text-zinc-500 text-sm font-medium">No projects created yet.</p>
+                <p className="text-zinc-600 text-xs mt-1">Use the left panel to register your first project.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {projects.map((p) => (
+                  <div
+                    key={p._id}
+                    className="bg-zinc-900/30 border border-zinc-900 hover:border-zinc-800 rounded-xl p-5 shadow transition-all duration-300 group hover:-translate-y-0.5"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest">
+                          Project
+                        </span>
+                        <h3 className="text-base font-bold text-zinc-200 group-hover:text-amber-400 transition-colors">
+                          {p.name}
+                        </h3>
+                      </div>
+                      <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors border border-zinc-800/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+        </div>
+      </main>
+
     </div>
   );
 }

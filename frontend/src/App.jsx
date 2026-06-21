@@ -1,33 +1,65 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";   // <-- add this
-import Dashboard from "./pages/Dashboard";
-import TaskPage from "./pages/TaskPage";
+import Login from "./Pages/Login";
+import Register from "./Pages/Register";
+import Dashboard from "./Pages/Dashboard";
+import TaskPage from "./Pages/TaskPage";
+
+// Wrapper for protected routes (evaluated dynamically on navigation)
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/login" replace />;
+};
+
+// Wrapper for public-only routes (redirects to dashboard if logged in)
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  return token ? <Navigate to="/dashboard" replace /> : children;
+};
 
 function App() {
-  const token = localStorage.getItem("token");
-
   return (
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
 
-        {/* Protected routes (only accessible if token exists) */}
+        {/* Protected routes */}
         <Route
           path="/dashboard"
-          element={token ? <Dashboard /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/tasks"
-          element={token ? <TaskPage /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <TaskPage />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Redirect root to dashboard if logged in, otherwise to login */}
+        {/* Root path redirect */}
         <Route
           path="/"
-          element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
+          element={<Navigate to="/dashboard" replace />}
         />
       </Routes>
     </BrowserRouter>
