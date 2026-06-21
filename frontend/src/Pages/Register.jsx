@@ -7,23 +7,34 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [selectedRole, setSelectedRole] = useState("Admin"); // Default portal: Admin, Manager, Member
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+ 
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim()) {
       alert("Please fill in all required fields.");
       return;
     }
-
+ 
     try {
       setLoading(true);
       const payload = { name, email, password };
-      if (inviteCode.trim()) payload.inviteCode = inviteCode;
-
+      if (selectedRole !== "Admin") {
+        if (!inviteCode.trim()) {
+          alert(`Invite code is required to join as a ${selectedRole}.`);
+          setLoading(false);
+          return;
+        }
+        payload.inviteCode = inviteCode.trim();
+        payload.role = selectedRole;
+      } else {
+        payload.role = "Admin";
+      }
+ 
       await axios.post("http://localhost:5000/api/auth/register", payload);
-      alert("Registration successful! Please log in.");
+      alert(`${selectedRole} registration successful! Please log in.`);
       navigate("/login");
     } catch (err) {
       console.error(err);
@@ -57,6 +68,33 @@ export default function Register() {
 
         {/* Form */}
         <form onSubmit={handleRegister} className="space-y-4">
+          
+          {/* Segmented Role Switcher */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 text-center">
+              Choose Signup Portal
+            </label>
+            <div className="flex border border-zinc-800 rounded-lg p-1 bg-zinc-950/60 mb-2">
+              {["Admin", "Manager", "Member"].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => {
+                    setSelectedRole(r);
+                    if (r === "Admin") setInviteCode(""); // Clear invite code for admin
+                  }}
+                  className={`flex-1 text-center py-2 text-xs font-semibold rounded-md transition-all duration-300 ${
+                    selectedRole === r
+                      ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/10"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
               Full Name *
@@ -102,26 +140,30 @@ export default function Register() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
-              Invite Code <span className="text-zinc-600">(Optional)</span>
-            </label>
-            <input
-              type="text"
-              className="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all duration-300 font-mono text-sm tracking-widest"
-              placeholder="Leave blank to create new org"
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
-              disabled={loading}
-            />
-          </div>
+          {/* Conditional Invite Code Input for Manager and Member signups */}
+          {selectedRole !== "Admin" && (
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+                Invite Code *
+              </label>
+              <input
+                type="text"
+                required
+                className="bg-zinc-950/80 border border-zinc-800/80 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all duration-300 font-mono text-sm tracking-widest"
+                placeholder="Enter workspace invite code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500 text-white font-bold py-3 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
-            {loading ? "Creating Account..." : "Register"}
+            {loading ? "Creating Account..." : `Register as ${selectedRole}`}
           </button>
         </form>
 

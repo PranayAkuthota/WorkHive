@@ -11,6 +11,7 @@ const projectRoutes = require("./routes/ProjectRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
 const chatRoutes = require("./routes/chatRoutes"); // ✅ ADD CHAT ROUTES
+const userRoutes = require("./routes/userRoutes"); // ✅ ADD USER ROUTES
 
 const app = express();
 const server = http.createServer(app); // ✅ wrap Express app in HTTP server
@@ -33,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/chat", chatRoutes); // ✅ ADD CHAT ENDPOINTS
+app.use("/api/users", userRoutes); // ✅ ADD USER ENDPOINTS
 
 app.get("/", (req, res) => {
     res.send("Server running");

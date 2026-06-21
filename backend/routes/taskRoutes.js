@@ -1,11 +1,12 @@
 const express = require("express");
 const Task = require("../models/Task");
 const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/role"); // ✅ ADD ROLECHECK
 const router = express.Router();
 const mongoose = require("mongoose");
 
-// Create Task
-router.post("/", auth, async (req, res) => {
+// Create Task (restricted to Admin and Manager)
+router.post("/", auth, roleCheck("Admin", "Manager"), async (req, res) => {
   try {
     console.log("========== CREATE TASK ==========");
     console.log("Request body:", req.body);
@@ -191,10 +192,16 @@ router.put("/:id", auth, async (req, res) => {
     }
 
     const { status, title, projectId } = req.body;
+
+    // Members are strictly restricted to updating task status
+    if (req.user.role === "Member" && (title !== undefined || projectId !== undefined)) {
+      return res.status(403).json({ message: "Access denied: Members can only update task status" });
+    }
+
     const updateData = {};
     if (status !== undefined) updateData.status = status;
-    if (title !== undefined) updateData.title = title;
-    if (projectId !== undefined) updateData.projectId = projectId;
+    if (title !== undefined && req.user.role !== "Member") updateData.title = title;
+    if (projectId !== undefined && req.user.role !== "Member") updateData.projectId = projectId;
 
     const task = await Task.findOneAndUpdate(
       { _id: id, tenantId: req.user.tenantId },
@@ -219,8 +226,8 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// Delete Task
-router.delete("/:id", auth, async (req, res) => {
+// Delete Task (restricted to Admin only)
+router.delete("/:id", auth, roleCheck("Admin"), async (req, res) => {
   try {
     console.log("========== DELETE TASK ==========");
     console.log("TaskId:", req.params.id);

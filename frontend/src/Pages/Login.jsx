@@ -5,26 +5,28 @@ import { useNavigate, Link } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState("Admin"); // Default portal: Admin, Manager, Member
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+ 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       alert("Please enter email and password.");
       return;
     }
-
+ 
     try {
       setLoading(true);
       console.log("Login clicked");
       const res = await axios.post("http://localhost:5000/api/auth/login", {
         email,
         password,
+        role: selectedRole
       });
       console.log("Response:", res.data);
       localStorage.setItem("token", res.data.token);
-      alert("Login success");
+      alert(`${selectedRole} Login Success`);
       navigate("/dashboard");
     } catch (err) {
       console.log("ERROR:", err);
@@ -33,13 +35,13 @@ export default function Login() {
       setLoading(false);
     }
   };
-
+ 
   return (
     <div className="flex min-h-screen justify-center items-center bg-zinc-950 relative overflow-hidden px-4">
       {/* Background Decorative Sapphire Glows */}
       <div className="absolute w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[120px] -top-24 -left-20 pointer-events-none" />
       <div className="absolute w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[120px] -bottom-24 -right-20 pointer-events-none" />
-
+ 
       {/* Card Container */}
       <div className="bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-xl p-8 rounded-2xl w-full max-w-md shadow-2xl relative z-10">
         
@@ -55,9 +57,33 @@ export default function Login() {
           </h2>
           <p className="text-zinc-400 text-sm mt-1">Welcome back to your dashboard</p>
         </div>
-
+ 
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-5">
+          
+          {/* Segmented Role Switcher */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 text-center">
+              Choose Login Portal
+            </label>
+            <div className="flex border border-zinc-800 rounded-lg p-1 bg-zinc-950/60 mb-2">
+              {["Admin", "Manager", "Member"].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setSelectedRole(r)}
+                  className={`flex-1 text-center py-2 text-xs font-semibold rounded-md transition-all duration-300 ${
+                    selectedRole === r
+                      ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/10"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
               Email Address
@@ -72,7 +98,7 @@ export default function Login() {
               disabled={loading}
             />
           </div>
-
+ 
           <div>
             <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">
               Password
@@ -87,13 +113,13 @@ export default function Login() {
               disabled={loading}
             />
           </div>
-
+ 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500 text-white font-bold py-3 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
-            {loading ? "Signing In..." : "Log In"}
+            {loading ? "Signing In..." : `Log In as ${selectedRole}`}
           </button>
         </form>
 

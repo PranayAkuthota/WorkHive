@@ -1,7 +1,8 @@
-// In ProjectRoutes.js (backend)
+
 const express = require("express");
 const Project = require("../models/Project");
 const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/role"); // ✅ ADD ROLECHECK
 const router = express.Router();
 
 // Get all projects for tenant
@@ -14,8 +15,8 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// Create project
-router.post("/", auth, async (req, res) => {
+// Create project (restricted to Admin and Manager)
+router.post("/", auth, roleCheck("Admin", "Manager"), async (req, res) => {
   try {
     const { name, description } = req.body;
     const project = new Project({

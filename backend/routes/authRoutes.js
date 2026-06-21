@@ -11,7 +11,7 @@ const router = express.Router();
 // REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, inviteCode } = req.body; // accept inviteCode
+    const { name, email, password, inviteCode, role: requestedRole } = req.body;
 
     let tenantId;
     let role = "Member"; // default role
@@ -23,8 +23,13 @@ router.post("/register", async (req, res) => {
         return res.status(400).json({ message: "Invalid invite code" });
       }
       tenantId = org._id;
-      // User becomes a member (or you could set role to "Member")
-      role = "Member";
+      
+      // Allowed signup roles under an organization invite
+      if (requestedRole === "Manager" || requestedRole === "Member") {
+        role = requestedRole;
+      } else {
+        role = "Member";
+      }
     } else {
       // No invite code: create a new organization (first user becomes admin)
       const inviteCode = nanoid(10); // generate a 10-character code
@@ -49,17 +54,22 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// LOGIN (unchanged)
+// LOGIN
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
+    const { email, password, role } = req.body;
+ 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
-
+ 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
+ 
+    // Role-based portal validation
+    if (role && user.role !== role) {
+      return res.status(403).json({ message: `Access denied: This account is not registered as a ${role}` });
+    }
+ 
     const token = jwt.sign(
       {
         userId: user._id,
@@ -69,7 +79,7 @@ router.post("/login", async (req, res) => {
       "SECRET_KEY",
       { expiresIn: "1d" }
     );
-
+ 
     res.json({ token });
   } catch (err) {
     res.status(500).json({ message: err.message, error: err.message });

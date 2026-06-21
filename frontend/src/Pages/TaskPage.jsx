@@ -3,6 +3,23 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import ChatDrawer from "../Components/ChatDrawer";
 
+// Helper to decode JWT payload on the client side
+const decodeToken = (token) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
 export default function TaskPage() {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState("");
@@ -15,6 +32,14 @@ export default function TaskPage() {
   const [apiStatus, setApiStatus] = useState("idle"); // idle, loading, success, error
   const [inviteCode, setInviteCode] = useState("");
   const navigate = useNavigate();
+
+  // Role state management
+  const [role] = useState(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return "Member";
+    const decoded = decodeToken(token);
+    return decoded?.role || "Member";
+  });
 
   // Fetch all tasks for current tenant
   const fetchTasks = async () => {
@@ -327,58 +352,60 @@ export default function TaskPage() {
                 </div>
               </div>
             </div>
-
+ 
             {/* Create Task Card */}
-            <section className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6">
-              <h2 className="text-lg font-bold text-zinc-200 mb-1">Create Task</h2>
-              <p className="text-xs text-zinc-500 mb-6">Initialize a new item inside a project</p>
-              
-              <form onSubmit={createTask} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
-                    Task Title
-                  </label>
-                  <input
-                    required
-                    className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 transition-all duration-300 text-sm"
-                    placeholder="e.g. Design API Contract"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+            {role !== "Member" && (
+              <section className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6">
+                <h2 className="text-lg font-bold text-zinc-200 mb-1">Create Task</h2>
+                <p className="text-xs text-zinc-500 mb-6">Initialize a new item inside a project</p>
+                
+                <form onSubmit={createTask} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
+                      Task Title
+                    </label>
+                    <input
+                      required
+                      className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 transition-all duration-300 text-sm"
+                      placeholder="e.g. Design API Contract"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+ 
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
+                      Project Scope
+                    </label>
+                    <select
+                      required
+                      className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 focus:outline-none focus:border-indigo-500/30 transition-all duration-300 text-sm appearance-none"
+                      value={projectId}
+                      onChange={(e) => setProjectId(e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="" className="text-zinc-600">-- Select Project --</option>
+                      {projects.map((project) => (
+                        <option key={project._id} value={project._id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+ 
+                  <button
+                    type="submit"
                     disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
-                    Project Scope
-                  </label>
-                  <select
-                    required
-                    className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 focus:outline-none focus:border-indigo-500/30 transition-all duration-300 text-sm appearance-none"
-                    value={projectId}
-                    onChange={(e) => setProjectId(e.target.value)}
-                    disabled={loading}
+                    className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 rounded-lg transition-all duration-300 transform active:scale-95 disabled:opacity-50 text-sm shadow-lg shadow-indigo-500/10"
                   >
-                    <option value="" className="text-zinc-600">-- Select Project --</option>
-                    {projects.map((project) => (
-                      <option key={project._id} value={project._id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 rounded-lg transition-all duration-300 transform active:scale-95 disabled:opacity-50 text-sm shadow-lg shadow-indigo-500/10"
-                >
-                  {loading ? "Creating..." : "Create Task"}
-                </button>
-              </form>
-            </section>
+                    {loading ? "Creating..." : "Create Task"}
+                  </button>
+                </form>
+              </section>
+            )}
           </div>
-
+ 
           {/* Tasks List Card */}
           <section className="lg:col-span-2 space-y-6">
             
@@ -400,7 +427,7 @@ export default function TaskPage() {
                   </button>
                 ))}
               </div>
-
+ 
               {/* Text Search Field */}
               <div className="relative">
                 <input
@@ -417,7 +444,7 @@ export default function TaskPage() {
                 </div>
               </div>
             </div>
-
+ 
             {/* List Wrapper */}
             <div className="bg-zinc-900/10 border border-zinc-900 rounded-2xl overflow-hidden">
               
@@ -458,7 +485,7 @@ export default function TaskPage() {
                           <span>Created {new Date(task.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-
+ 
                       {/* Right Control actions */}
                       <div className="flex items-center gap-3 self-end sm:self-auto">
                         
@@ -479,28 +506,30 @@ export default function TaskPage() {
                             </svg>
                           </div>
                         </div>
-
+ 
                         {/* Delete action button */}
-                        <button
-                          onClick={() => deleteTask(task._id)}
-                          className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-red-400 hover:border-red-500/10 hover:bg-red-500/5 transition-all"
-                          title="Delete Task"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-
+                        {role === "Admin" && (
+                          <button
+                            onClick={() => deleteTask(task._id)}
+                            className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-red-400 hover:border-red-500/10 hover:bg-red-500/5 transition-all"
+                            title="Delete Task"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+ 
                       </div>
-
+ 
                     </div>
                   ))}
                 </div>
               )}
-
+ 
             </div>
           </section>
-
+ 
         </div>
       </main>
       <ChatDrawer />
