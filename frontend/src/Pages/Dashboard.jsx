@@ -39,6 +39,14 @@ export default function Dashboard() {
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
 
+  // Add User Form States
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserRole, setNewUserRole] = useState("Member");
+  const [addUserLoading, setAddUserLoading] = useState(false);
+
   // Logout function
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
@@ -124,6 +132,43 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Failed to remove user:", err);
       alert("Failed to remove user: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // Handle adding a user directly
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    if (!newUserName.trim() || !newUserEmail.trim() || !newUserPassword.trim()) {
+      alert("Please fill in all fields.");
+      return;
+    }
+    try {
+      setAddUserLoading(true);
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "http://localhost:5000/api/users",
+        {
+          name: newUserName,
+          email: newUserEmail,
+          password: newUserPassword,
+          role: newUserRole
+        },
+        {
+          headers: { Authorization: token }
+        }
+      );
+      alert("User added successfully.");
+      setIsAddUserOpen(false);
+      setNewUserName("");
+      setNewUserEmail("");
+      setNewUserPassword("");
+      setNewUserRole("Member");
+      fetchUsers();
+    } catch (err) {
+      console.error("Add user error:", err);
+      alert(err.response?.data?.message || err.message || "Failed to add user");
+    } finally {
+      setAddUserLoading(false);
     }
   };
 
@@ -727,12 +772,112 @@ export default function Dashboard() {
 
               {/* Team Members List */}
               <div className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-zinc-200">Active Workspace Users</h2>
-                  <span className="text-xs text-zinc-500 font-mono">
-                    {users.length} {users.length === 1 ? "user" : "users"} total (excluding you)
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-zinc-200">Active Workspace Users</h2>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      {users.length} {users.length === 1 ? "user" : "users"} total (excluding you)
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setIsAddUserOpen(!isAddUserOpen)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white transition-all shadow-md shadow-indigo-500/10 flex items-center justify-center gap-1.5 self-start sm:self-auto"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={isAddUserOpen ? "M6 18L18 6M6 6l12 12" : "M12 4v16m8-8H4"} />
+                    </svg>
+                    {isAddUserOpen ? "Close Form" : "Add Team Member"}
+                  </button>
                 </div>
+
+                {/* Elegant Inline Add User Form */}
+                {isAddUserOpen && (
+                  <form onSubmit={handleAddUser} className="bg-zinc-950/40 border border-zinc-900/80 rounded-xl p-5 mb-6 space-y-4">
+                    <h3 className="text-sm font-semibold text-indigo-400">Add New Team Member</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newUserName}
+                          onChange={(e) => setNewUserName(e.target.value)}
+                          className="bg-zinc-900/40 border border-zinc-900 rounded-lg p-2.5 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 text-xs"
+                          placeholder="e.g. Jane Doe"
+                          disabled={addUserLoading}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={newUserEmail}
+                          onChange={(e) => setNewUserEmail(e.target.value)}
+                          className="bg-zinc-900/40 border border-zinc-900 rounded-lg p-2.5 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 text-xs"
+                          placeholder="e.g. jane@company.com"
+                          disabled={addUserLoading}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+                          Password *
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          value={newUserPassword}
+                          onChange={(e) => setNewUserPassword(e.target.value)}
+                          className="bg-zinc-900/40 border border-zinc-900 rounded-lg p-2.5 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 text-xs"
+                          placeholder="••••••••"
+                          disabled={addUserLoading}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1.5">
+                          Assigned Role *
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={newUserRole}
+                            onChange={(e) => setNewUserRole(e.target.value)}
+                            className="bg-zinc-900/40 border border-zinc-900 text-zinc-100 rounded-lg p-2.5 w-full focus:outline-none focus:border-indigo-500/30 text-xs appearance-none pr-8 cursor-pointer"
+                            disabled={addUserLoading}
+                          >
+                            <option value="Member">Member</option>
+                            <option value="Manager">Manager</option>
+                          </select>
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddUserOpen(false)}
+                        className="px-4 py-2 border border-zinc-900 hover:bg-zinc-900/40 text-zinc-400 hover:text-zinc-200 rounded-lg text-xs font-semibold transition-all"
+                        disabled={addUserLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-all shadow-md shadow-indigo-500/10"
+                        disabled={addUserLoading}
+                      >
+                        {addUserLoading ? "Adding User..." : "Add User"}
+                      </button>
+                    </div>
+                  </form>
+                )}
 
                 {usersLoading ? (
                   <div className="text-center py-10 text-zinc-500 text-sm">

@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 const roleCheck = require("../middleware/role");
@@ -51,4 +52,53 @@ router.delete("/:id", auth, roleCheck("Admin"), async (req, res) => {
   }
 });
 
+// Add a user directly to the tenant (Admin only)
+router.post("/", auth, roleCheck("Admin"), async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (role !== "Manager" && role !== "Member") {
+      return res.status(400).json({ message: "Role must be either Manager or Member" });
+    }
+
+    if (!req.user?.tenantId) {
+      return res.status(400).json({ message: "Tenant ID is missing from token" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      tenantId: req.user.tenantId
+    });
+
+    res.json({
+      message: "User added successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role
+      }
+    });
+  } catch (err) {
+    console.error("❌ ADD USER ERROR:", err);
+    res.status(500).json({ message: "Failed to add user", error: err.message });
+  }
+});
+
 module.exports = router;
+
