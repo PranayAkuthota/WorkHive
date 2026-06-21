@@ -19,6 +19,12 @@ const decodeToken = (token) => {
   }
 };
 
+// Helper to extract name initials
+const getInitials = (name) => {
+  if (!name) return "?";
+  return name.trim().charAt(0).toUpperCase();
+};
+
 export default function ChatDrawer() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -92,9 +98,9 @@ export default function ChatDrawer() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold px-4 py-3 rounded-full shadow-2xl hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all duration-300 transform active:scale-95 group"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-4 py-3 rounded-full shadow-2xl hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300 transform active:scale-95 group"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-zinc-950 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
           <span className="text-xs tracking-wider uppercase">Colleague Chat</span>
@@ -108,8 +114,8 @@ export default function ChatDrawer() {
           {/* Header */}
           <header className="bg-zinc-900/60 border-b border-zinc-900 p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <h3 className="font-bold text-sm tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-amber-300">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <h3 className="font-bold text-sm tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-blue-300">
                 Colleague Workspace
               </h3>
             </div>
@@ -126,7 +132,7 @@ export default function ChatDrawer() {
           </header>
 
           {/* Messages Log area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scroll">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-zinc-700 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,40 +148,48 @@ export default function ChatDrawer() {
                 const isSelf = msg.senderId?._id === currentUserId || msg.senderId === currentUserId;
                 const senderName = msg.senderId?.name || "Colleague";
                 
-                return (
-                  <div
-                    key={msg._id}
-                    className={`flex flex-col max-w-[85%] ${
-                      isSelf ? "ml-auto items-end" : "mr-auto items-start"
-                    }`}
-                  >
-                    {/* Sender label (only if not self) */}
-                    {!isSelf && (
-                      <span className="text-[10px] font-bold text-amber-500/80 mb-1 ml-1 uppercase tracking-wider">
-                        {senderName}
+                if (isSelf) {
+                  return (
+                    <div key={msg._id} className="flex flex-col items-end max-w-[85%] ml-auto">
+                      <div className="px-3 py-2 rounded-xl text-xs leading-relaxed bg-indigo-600 text-white rounded-tr-none font-medium shadow-lg shadow-indigo-600/5">
+                        {msg.content}
+                      </div>
+                      <span className="text-[8px] text-zinc-600 mt-1 px-1">
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
-                    )}
-
-                    {/* Chat Bubble bubble */}
-                    <div
-                      className={`px-3 py-2 rounded-xl text-xs leading-relaxed ${
-                        isSelf
-                          ? "bg-amber-500 text-zinc-950 rounded-tr-none font-medium shadow-lg shadow-amber-500/5"
-                          : "bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-tl-none"
-                      }`}
-                    >
-                      {msg.content}
                     </div>
-
-                    {/* Timestamp */}
-                    <span className="text-[9px] text-zinc-600 mt-1 px-1">
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                );
+                  );
+                } else {
+                  return (
+                    <div key={msg._id} className="flex gap-2.5 items-start max-w-[85%] mr-auto">
+                      {/* Avatar initial badge circle */}
+                      <div
+                        className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400 flex-shrink-0 mt-0.5"
+                        title={senderName}
+                      >
+                        {getInitials(senderName)}
+                      </div>
+                      
+                      <div className="flex flex-col items-start">
+                        <span className="text-[9px] font-bold text-blue-400/80 mb-1 ml-1 uppercase tracking-wider">
+                          {senderName}
+                        </span>
+                        <div className="px-3 py-2 rounded-xl text-xs leading-relaxed bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-tl-none">
+                          {msg.content}
+                        </div>
+                        <span className="text-[8px] text-zinc-600 mt-1 px-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
               })
             )}
             <div ref={messageEndRef} />
@@ -191,12 +205,12 @@ export default function ChatDrawer() {
               placeholder="Post a workspace status..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="bg-zinc-900 border border-zinc-850 rounded-lg py-2 px-3 flex-1 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/30 transition-colors"
+              className="bg-zinc-900 border border-zinc-850 rounded-lg py-2 px-3 flex-1 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-blue-500/30 transition-colors"
             />
             <button
               type="submit"
               disabled={!content.trim()}
-              className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-950 font-bold w-8 h-8 rounded-lg flex items-center justify-center transition-all transform active:scale-95 flex-shrink-0"
+              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold w-8 h-8 rounded-lg flex items-center justify-center transition-all transform active:scale-95 flex-shrink-0 shadow-md shadow-blue-500/15"
               title="Post Update"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

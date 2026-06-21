@@ -8,6 +8,8 @@ export default function TaskPage() {
   const [projectId, setProjectId] = useState("");
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [apiStatus, setApiStatus] = useState("idle"); // idle, loading, success, error
@@ -159,29 +161,46 @@ export default function TaskPage() {
       case "Completed":
         return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
       case "In Progress":
-        return "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+        return "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
       default:
         return "bg-zinc-800/40 text-zinc-400 border border-zinc-700/50";
     }
   };
 
+  // Client-side filtering logic
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (task.projectId?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "All" || task.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Calculate project metrics
+  const totalTasksCount = tasks.length;
+  const completedTasksCount = tasks.filter((t) => t.status === "Completed").length;
+  const progressPercent = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+  
+  // Circle circumference is ~150 (r=24, 2 * pi * 24 = 150.7)
+  const strokeDashoffset = 150 - (150 * progressPercent) / 100;
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col md:flex-row font-sans">
       
       {/* Decorative Blur Ambient Elements */}
-      <div className="absolute w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[140px] top-10 left-10 pointer-events-none" />
+      <div className="absolute w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[140px] top-10 left-10 pointer-events-none" />
+      <div className="absolute w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[140px] bottom-10 right-10 pointer-events-none" />
       
       {/* Sidebar Component */}
       <aside className="w-full md:w-64 bg-zinc-900/40 border-b md:border-b-0 md:border-r border-zinc-900 backdrop-blur-xl flex flex-col justify-between p-6 z-10">
         <div className="space-y-8">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+            <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
               </svg>
             </div>
-            <span className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-amber-300">
+            <span className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-indigo-300">
               Workhive
             </span>
           </div>
@@ -200,7 +219,7 @@ export default function TaskPage() {
             
             <Link
               to="/tasks"
-              className="flex items-center gap-3 bg-amber-500/10 text-amber-400 font-medium px-4 py-2.5 rounded-lg border border-amber-500/20 transition-all duration-300"
+              className="flex items-center gap-3 bg-indigo-500/10 text-indigo-400 font-medium px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all duration-300"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -219,7 +238,7 @@ export default function TaskPage() {
                 Invite Code
               </span>
               <div className="flex items-center justify-between gap-2">
-                <code className="text-xs font-mono text-amber-400 bg-zinc-900/80 px-2.5 py-1 rounded border border-zinc-800 select-all">
+                <code className="text-xs font-mono text-indigo-400 bg-zinc-900/80 px-2.5 py-1 rounded border border-zinc-800 select-all">
                   {inviteCode}
                 </code>
                 <button
@@ -227,7 +246,7 @@ export default function TaskPage() {
                     navigator.clipboard.writeText(inviteCode);
                     alert("Invite code copied to clipboard!");
                   }}
-                  className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-amber-400 transition-colors"
+                  className="p-1.5 hover:bg-zinc-800 rounded text-zinc-400 hover:text-indigo-400 transition-colors"
                   title="Copy Invite Code"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -258,7 +277,7 @@ export default function TaskPage() {
         {/* Header */}
         <header className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 via-amber-100 to-amber-400 tracking-tight m-0">
+            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 via-blue-100 to-indigo-400 tracking-tight m-0">
               Tasks Dashboard
             </h1>
             <p className="text-zinc-400 text-sm mt-1">Organize, status-track, and modify tenant actions</p>
@@ -289,63 +308,114 @@ export default function TaskPage() {
         {/* Tasks Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Create Task Card */}
-          <section className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6 h-fit">
-            <h2 className="text-lg font-bold text-zinc-200 mb-1">Create Task</h2>
-            <p className="text-xs text-zinc-500 mb-6">Initialize a new item inside a project</p>
+          {/* Left panel: Create Task & Progress metrics */}
+          <div className="space-y-8 h-fit">
             
-            <form onSubmit={createTask} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
-                  Task Title
-                </label>
-                <input
-                  required
-                  className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-amber-500/30 transition-all duration-300 text-sm"
-                  placeholder="e.g. Design API Contract"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={loading}
-                />
+            {/* Project Progress Meter Ring */}
+            <div className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-zinc-200">Workspace Progress</h2>
+                  <p className="text-xs text-zinc-500">Completed task ratio</p>
+                </div>
+                <div className="relative w-14 h-14 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="28" cy="28" r="24" className="stroke-zinc-900" strokeWidth="4" fill="transparent" />
+                    <circle cx="28" cy="28" r="24" className="stroke-indigo-500 transition-all duration-500" strokeWidth="4" fill="transparent" strokeDasharray="150" strokeDashoffset={strokeDashoffset} />
+                  </svg>
+                  <span className="absolute text-xs font-bold text-indigo-400">{progressPercent}%</span>
+                </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
-                  Project Scope
-                </label>
-                <select
-                  required
-                  className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 focus:outline-none focus:border-amber-500/30 transition-all duration-300 text-sm appearance-none"
-                  value={projectId}
-                  onChange={(e) => setProjectId(e.target.value)}
+            {/* Create Task Card */}
+            <section className="bg-zinc-900/20 border border-zinc-900 rounded-2xl p-6">
+              <h2 className="text-lg font-bold text-zinc-200 mb-1">Create Task</h2>
+              <p className="text-xs text-zinc-500 mb-6">Initialize a new item inside a project</p>
+              
+              <form onSubmit={createTask} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
+                    Task Title
+                  </label>
+                  <input
+                    required
+                    className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 transition-all duration-300 text-sm"
+                    placeholder="e.g. Design API Contract"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">
+                    Project Scope
+                  </label>
+                  <select
+                    required
+                    className="bg-zinc-950 border border-zinc-900 rounded-lg p-3 w-full text-zinc-100 focus:outline-none focus:border-indigo-500/30 transition-all duration-300 text-sm appearance-none"
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="" className="text-zinc-600">-- Select Project --</option>
+                    {projects.map((project) => (
+                      <option key={project._id} value={project._id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
                   disabled={loading}
+                  className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2.5 rounded-lg transition-all duration-300 transform active:scale-95 disabled:opacity-50 text-sm shadow-lg shadow-indigo-500/10"
                 >
-                  <option value="" className="text-zinc-600">-- Select Project --</option>
-                  {projects.map((project) => (
-                    <option key={project._id} value={project._id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-2.5 rounded-lg transition-all duration-300 transform active:scale-95 disabled:opacity-50 text-sm"
-              >
-                {loading ? "Creating..." : "Create Task"}
-              </button>
-            </form>
-          </section>
+                  {loading ? "Creating..." : "Create Task"}
+                </button>
+              </form>
+            </section>
+          </div>
 
           {/* Tasks List Card */}
           <section className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-zinc-200 m-0">Task List</h2>
-              <span className="text-xs text-zinc-500 font-mono">
-                {tasks.length} {tasks.length === 1 ? "task" : "tasks"} total
-              </span>
+            
+            {/* Header controls (Filters and Search) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              {/* Tab Filters */}
+              <div className="flex border border-zinc-900 rounded-lg p-1 bg-zinc-900/10 backdrop-blur">
+                {["All", "Pending", "In Progress", "Completed"].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setStatusFilter(filter)}
+                    className={`text-[10px] sm:text-xs font-semibold px-3 py-1.5 rounded-md transition-all ${
+                      statusFilter === filter
+                        ? "bg-indigo-500 text-white"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+
+              {/* Text Search Field */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-zinc-950 border border-zinc-900 rounded-lg py-2 pl-9 pr-4 text-xs text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-indigo-500/30 transition-colors w-full sm:w-48"
+                />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* List Wrapper */}
@@ -353,26 +423,26 @@ export default function TaskPage() {
               
               {apiStatus === "loading" && tasks.length === 0 ? (
                 <div className="p-10 text-center text-zinc-500 text-sm">
-                  <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                   Loading tasks...
                 </div>
-              ) : tasks.length === 0 ? (
+              ) : filteredTasks.length === 0 ? (
                 <div className="p-12 text-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-zinc-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
-                  <p className="text-zinc-500 text-sm font-medium">No tasks found.</p>
-                  <p className="text-zinc-600 text-xs mt-1">Create your first task using the left form.</p>
+                  <p className="text-zinc-500 text-sm font-medium">No matching tasks found.</p>
+                  <p className="text-zinc-600 text-xs mt-1">Try resetting filters or search terms.</p>
                 </div>
               ) : (
                 <div className="divide-y divide-zinc-900">
-                  {tasks.map((task) => (
+                  {filteredTasks.map((task) => (
                     <div
                       key={task._id}
                       className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-900/10 transition-colors group"
                     >
                       <div className="space-y-1.5 flex-1">
-                        <h3 className="font-semibold text-zinc-200 group-hover:text-amber-400 transition-colors text-sm sm:text-base">
+                        <h3 className="font-semibold text-zinc-200 group-hover:text-indigo-400 transition-colors text-sm sm:text-base">
                           {task.title}
                         </h3>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
@@ -400,11 +470,11 @@ export default function TaskPage() {
                             className={`${getStatusBadgeStyle(task.status)} text-xs font-semibold px-3 py-1.5 rounded-lg hover:brightness-110 cursor-pointer focus:outline-none transition-all appearance-none pr-7`}
                           >
                             <option value="Pending" className="bg-zinc-950 text-zinc-400">Pending</option>
-                            <option value="In Progress" className="bg-zinc-950 text-amber-400">In Progress</option>
+                            <option value="In Progress" className="bg-zinc-950 text-indigo-400">In Progress</option>
                             <option value="Completed" className="bg-zinc-950 text-emerald-400">Completed</option>
                           </select>
                           <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
                           </div>
