@@ -53,3 +53,17 @@
   flex-direction: column;
   width: 100%;
 }
+
+/* Splash Screen Loading Progress Keyframe */
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(250%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
