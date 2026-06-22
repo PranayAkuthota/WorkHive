@@ -634,8 +634,14 @@ export default function Dashboard() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400" viewBox="0 0 100 100" fill="none">
+                <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="50,38 60,44 60,56 50,62 40,56 40,44" />
+                  <path d="M60,20 L70,26 L70,38 L60,44" />
+                  <path d="M40,44 L30,38 L30,26 L40,20" />
+                  <path d="M50,62 L50,78 L40,84 L30,78" />
+                </g>
+                <circle cx="50" cy="50" r="4" fill="#60a5fa" />
               </svg>
             </div>
             <span className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 to-indigo-300">
