@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -15,7 +16,7 @@ export default function Register() {
   useEffect(() => {
     const fetchOrgs = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/organizations/list");
+        const res = await axios.get(`${API_BASE_URL}/api/organizations/list`);
         setOrgList(res.data);
       } catch (err) {
         console.error("Failed to load organizations list:", err);
@@ -46,7 +47,7 @@ export default function Register() {
         payload.role = "Admin";
       }
  
-      await axios.post("http://localhost:5000/api/auth/register", payload);
+      await axios.post(`${API_BASE_URL}/api/auth/register`, payload);
       alert(`${selectedRole} registration successful! Please log in.`);
       navigate("/login");
     } catch (err) {

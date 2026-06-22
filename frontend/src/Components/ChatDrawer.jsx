@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 // Helper to decode JWT payload on the client side
 const decodeToken = (token) => {
@@ -57,7 +58,7 @@ export default function ChatDrawer() {
     // Fetch message history
     const fetchHistory = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/chat/history", {
+        const res = await axios.get(`${API_BASE_URL}/api/chat/history`, {
           headers: { Authorization: token },
         });
         setMessages(res.data);
@@ -68,7 +69,7 @@ export default function ChatDrawer() {
     fetchHistory();
 
     // Establish WebSocket connection
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(API_BASE_URL, {
       auth: { token },
     });
 

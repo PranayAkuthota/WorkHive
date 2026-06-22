@@ -2,6 +2,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import ChatDrawer from "../Components/ChatDrawer";
+import { API_BASE_URL } from "../config";
 
 // Helper to decode JWT payload on the client side
 const decodeToken = (token) => {
@@ -58,7 +59,7 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await axios.get("http://localhost:5000/api/projects", {
+      const res = await axios.get(`${API_BASE_URL}/api/projects`, {
         headers: { Authorization: token }
       });
       setProjects(res.data);
@@ -75,7 +76,7 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await axios.get("http://localhost:5000/api/tasks", {
+      const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
         headers: { Authorization: token }
       });
       setTasks(res.data);
@@ -89,7 +90,7 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/tasks/${taskId}`,
+        `${API_BASE_URL}/api/tasks/${taskId}`,
         { status: newStatus },
         { headers: { Authorization: token } }
       );
@@ -106,7 +107,7 @@ export default function Dashboard() {
       setUsersLoading(true);
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get(`${API_BASE_URL}/api/users`, {
         headers: { Authorization: token }
       });
       setUsers(res.data);
@@ -124,7 +125,7 @@ export default function Dashboard() {
     }
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/users/${userId}`, {
+      await axios.delete(`${API_BASE_URL}/api/users/${userId}`, {
         headers: { Authorization: token }
       });
       alert("User removed successfully.");
@@ -146,7 +147,7 @@ export default function Dashboard() {
       setAddUserLoading(true);
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/users",
+        `${API_BASE_URL}/api/users`,
         {
           name: newUserName,
           email: newUserEmail,
@@ -193,7 +194,7 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await axios.get("http://localhost:5000/api/organizations/invite-code", {
+        const res = await axios.get(`${API_BASE_URL}/api/organizations/invite-code`, {
           headers: { Authorization: token }
         });
         setInviteCode(res.data.inviteCode);
@@ -216,7 +217,7 @@ export default function Dashboard() {
       setLoading(true);
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/projects",
+        `${API_BASE_URL}/api/projects`,
         { name },
         { headers: { Authorization: token } }
       );

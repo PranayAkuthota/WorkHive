@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import ChatDrawer from "../Components/ChatDrawer";
+import { API_BASE_URL } from "../config";
 
 // Helper to decode JWT payload on the client side
 const decodeToken = (token) => {
@@ -53,7 +54,7 @@ export default function TaskPage() {
         return;
       }
 
-      const res = await axios.get("http://localhost:5000/api/tasks", {
+      const res = await axios.get(`${API_BASE_URL}/api/tasks`, {
         headers: { Authorization: token },
       });
 
@@ -73,7 +74,7 @@ export default function TaskPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
       
-      const res = await axios.get("http://localhost:5000/api/projects", {
+      const res = await axios.get(`${API_BASE_URL}/api/projects`, {
         headers: { Authorization: token },
       });
       setProjects(res.data);
@@ -88,7 +89,7 @@ export default function TaskPage() {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await axios.get("http://localhost:5000/api/organizations/invite-code", {
+        const res = await axios.get(`${API_BASE_URL}/api/organizations/invite-code`, {
           headers: { Authorization: token }
         });
         setInviteCode(res.data.inviteCode);
@@ -124,7 +125,7 @@ export default function TaskPage() {
       }
 
       await axios.post(
-        "http://localhost:5000/api/tasks",
+        `${API_BASE_URL}/api/tasks`,
         { title, projectId },
         {
           headers: { Authorization: token },
@@ -148,7 +149,7 @@ export default function TaskPage() {
     
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`, {
+      await axios.delete(`${API_BASE_URL}/api/tasks/${taskId}`, {
         headers: { Authorization: token },
       });
       fetchTasks(); // Refresh list
@@ -163,7 +164,7 @@ export default function TaskPage() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/tasks/${taskId}`,
+        `${API_BASE_URL}/api/tasks/${taskId}`,
         { status: newStatus },
         { headers: { Authorization: token } }
       );

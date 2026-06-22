@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import ChatDrawer from "../Components/ChatDrawer";
+import { API_BASE_URL } from "../config";
 
 // Helper to decode JWT token
 const decodeToken = (token) => {
@@ -77,7 +78,7 @@ export default function CodeWorkspace() {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await axios.get("http://localhost:5000/api/projects", {
+      const res = await axios.get(`${API_BASE_URL}/api/projects`, {
         headers: { Authorization: token }
       });
       setProjects(res.data);
@@ -93,7 +94,7 @@ export default function CodeWorkspace() {
       setLoading(true);
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await axios.get("http://localhost:5000/api/snippets", {
+      const res = await axios.get(`${API_BASE_URL}/api/snippets`, {
         headers: { Authorization: token }
       });
       setSnippets(res.data);
@@ -147,7 +148,7 @@ export default function CodeWorkspace() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/snippets", {
+      const res = await axios.post(`${API_BASE_URL}/api/snippets`, {
         title: newTitle.trim(),
         language: newLang,
         code: starterCode,
@@ -174,7 +175,7 @@ export default function CodeWorkspace() {
     try {
       setSaveLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:5000/api/snippets/${activeSnippet._id}`, {
+      const res = await axios.put(`${API_BASE_URL}/api/snippets/${activeSnippet._id}`, {
         title: editorTitle,
         code: editorCode,
         language: editorLang,
@@ -200,7 +201,7 @@ export default function CodeWorkspace() {
     if (!window.confirm("Are you sure you want to delete this snippet?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/snippets/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/snippets/${id}`, {
         headers: { Authorization: token }
       });
       const filtered = snippets.filter(s => s._id !== id);
