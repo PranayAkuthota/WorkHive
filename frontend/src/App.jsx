@@ -5,6 +5,7 @@ import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import Dashboard from "./Pages/Dashboard";
 import TaskPage from "./Pages/TaskPage";
+import CodeWorkspace from "./Pages/CodeWorkspace";
 
 // Wrapper for protected routes (evaluated dynamically on navigation)
 const ProtectedRoute = ({ children }) => {
@@ -113,6 +114,14 @@ function App() {
           element={
             <ProtectedRoute>
               <TaskPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspace"
+          element={
+            <ProtectedRoute>
+              <CodeWorkspace />
             </ProtectedRoute>
           }
         />
